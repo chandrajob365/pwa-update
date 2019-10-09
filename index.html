@@ -19,7 +19,11 @@
         left: 50%;
         bottom: 30px;
       }
-
+      a {
+        cursor: "pointer";
+        color: white;
+        font-weight: 700;
+      }
       #snackbar.show {
         visibility: visible;
         -webkit-animation: fadein 0.5s;
@@ -56,11 +60,22 @@
     <img src="./dog.jpg" />
     <!-- The actual snackbar -->
     <div id="snackbar">
-      A new version of this app is available. Click <a id="reload">here</a> to
-      update.
+      A new version of this app is available. Click
+      <a id="reload" href="#">here</a> to update.
     </div>
   </body>
   <script>
+    let newWorker;
+    // The click event on the notification
+    document.getElementById("reload").addEventListener("click", () => {
+      newWorker.postMessage({ action: "skipWaiting" });
+    });
+
+    function showUpdateBar() {
+      let snackbar = document.getElementById("snackbar");
+      snackbar.className = "show";
+    }
+
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("./sw.js")
@@ -70,11 +85,34 @@
             "Service worker registration was successfull with scope :: ",
             registration.scope
           );
+          registration.addEventListener("updatefound", () => {
+            // An updated service worker has appeared in reg.installing!
+            newWorker = registration.installing;
+            newWorker.addEventListener("statechange", () => {
+              // Has service worker state changed ?
+              switch (newWorker.state) {
+                case "installed":
+                  // There is a new service worker available, show the notification
+                  if (navigator.serviceWorker.controller) {
+                    showUpdateBar();
+                  }
+                  // No updates available
+                  break;
+              }
+            });
+          });
         })
         .catch(err => {
           // Resgistraion failed
           console.log("Service worker registration failed :: ", err);
         });
+
+      let refreshing;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshing) return;
+        window.location.reload();
+        refreshing = true;
+      });
     }
   </script>
 </html>
