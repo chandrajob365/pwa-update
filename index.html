@@ -60,5 +60,21 @@
       update.
     </div>
   </body>
-  <script></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .then(registration => {
+          // Registration was successfull
+          console.log(
+            "Service worker registration was successfull with scope :: ",
+            registration.scope
+          );
+        })
+        .catch(err => {
+          // Resgistraion failed
+          console.log("Service worker registration failed :: ", err);
+        });
+    }
+  </script>
 </html>
